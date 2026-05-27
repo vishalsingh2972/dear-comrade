@@ -40,4 +40,21 @@ export class PatientService {
       // await this.httpService.post('https://api.infobip.com/...', { ... }).toPromise();
     }
   }
+
+  async getReportById(reportId: string) {
+    const report = await this.prisma.labReport.findUnique({
+      where: { id: reportId },
+      include: { biomarkers: true },
+    });
+
+    if (!report) {
+      throw new Error('Report not found');
+    }
+
+    return {
+      ...report,
+      requiresAttention: report.biomarkers.some(b => b.isOutOfRange),
+      criticalAnomaliesSummary: report.criticalAnomaliesSummary,
+    };
+  }
 }
