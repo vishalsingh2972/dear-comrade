@@ -21,25 +21,16 @@ export default function Home() {
     }
   };
 
-  const playAudio = async (reportId: string) => {
-    console.log("Button clicked for report:", reportId); // Check this in F12 console
-    setLoading(true); // You can reuse your loading state
-    try {
-      const url = `http://localhost:3000/patient/${phone}/report/${reportId}/audio`;
-      console.log("Calling URL:", url);
+  const playAudio = (reportId: string) => {
+    console.log("Button clicked for report:", reportId);
 
-      const response = await axios.get(url, {
-        params: { lang: language }
-      });
+    // Construct the URL exactly as it is defined in your Controller
+    const streamUrl = `http://localhost:3000/patient/${phone}/report/${reportId}/audio?lang=${language}`;
 
-      console.log("Response received:", response.data);
-      setAudioUrl(response.data.audioUrl);
-    } catch (err: any) {
-      console.error("DEBUG ERROR:", err);
-      alert(`Failed: ${err.message || "Unknown error"}`);
-    } finally {
-      setLoading(false);
-    }
+    console.log("Setting audio source to:", streamUrl);
+
+    // Directly set the URL to the state, and the <audio> tag will handle the stream
+    setAudioUrl(streamUrl);
   };
 
   return (

@@ -1,33 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
+import { Response } from 'express';
 
 @Injectable()
 export class SarvamService {
   private readonly apiKey = process.env.SARVAM_API_KEY;
-  private readonly apiUrl = 'https://api.sarvam.ai/text-to-speech';
+  private readonly apiUrl = 'https://api.sarvam.ai/text-to-speech/stream';
 
-  async convertTextToSpeech(text: string, language: string = 'hi-IN'): Promise<string> {
-    try {
-      // FIX 1: Provide the actual request body inside the post() method
-      const response = await axios.post(this.apiUrl, {
+  async streamTextToSpeech(text: string, res: Response, lang: string = 'hi-IN') {
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': this.apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         text: text,
-        target_language_code: language,
-        speaker: 'Shruti',
-      }, {
-        headers: {
-          'api-subscription-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-      });
+        target_language_code: lang,
+        speaker: 'shubh',
+        model: 'bulbul:v3',
+      }),
+    });
 
-      console.log("FULL SARVAM RESPONSE:", JSON.stringify(response.data, null, 2));
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Sarvam API error: ${JSON.stringify(errorData)}`);
+    }
 
-      return response.data.audio_url || response.data.url || response.data.data?.audio_url;
-    } catch (error: unknown) {
-      // FIX 2: Cast the error to an 'any' or check its type so TS allows access to properties
-      const err = error as any; 
-      console.error("Sarvam API Error:", err.response?.data || err.message || err);
-      throw error;
+    res.setHeader('Content-Type', 'audio/mpeg');
+    
+    // Node.js stream handling
+    const reader = response.body.getReader();
+    
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(Buffer.from(value)); 
+      }
+    } finally {
+      res.end();
     }
   }
 }

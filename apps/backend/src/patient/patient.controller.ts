@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { InsightService } from './insight.service';
 import { SarvamService } from './sarvam.service';
+import { Response } from 'express';
 
 @Controller('patient')
 export class PatientController {
@@ -37,19 +38,17 @@ export class PatientController {
     @Param('phoneNumber') phoneNumber: string,
     @Param('reportId') reportId: string,
     @Query('lang') lang: string = 'hi-IN',
+    @Res() res: Response, // Injected to handle streaming
   ) {
     const report = await this.patientService.getReportById(reportId);
 
-    // Debugging: Log what we are sending to Sarvam
-    console.log("Generating audio for summary:", report.criticalAnomaliesSummary);
+    console.log("Streaming audio for report:", reportId);
 
-    const audioUrl = await this.sarvamService.convertTextToSpeech(
+    // Call the streaming service, passing the response object
+    await this.sarvamService.streamTextToSpeech(
       report.criticalAnomaliesSummary,
+      res,
       lang
     );
-
-    console.log("Sarvam returned URL:", audioUrl);
-
-    return { audioUrl };
   }
 }
