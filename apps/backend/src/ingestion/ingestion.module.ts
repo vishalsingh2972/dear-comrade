@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { IngestionController } from './ingestion.controller';
 import { IngestionProcessor } from './ingestion.processor';
+import { PrismaService } from '../prisma.service';
 
 @Module({
   imports: [
@@ -11,6 +12,6 @@ import { IngestionProcessor } from './ingestion.processor';
     }),
   ],
   controllers: [IngestionController],
-  providers: [IngestionProcessor],
+  providers: [IngestionProcessor, PrismaService],
 })
 export class IngestionModule {}

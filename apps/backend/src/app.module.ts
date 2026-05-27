@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { IngestionModule } from './ingestion/ingestion.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -12,6 +13,10 @@ import { IngestionModule } from './ingestion/ingestion.module';
       },
     }),
     IngestionModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
   ],
 })
-export class AppModule {}
+export class AppModule { }
