@@ -8,6 +8,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     const connectionString = process.env.DATABASE_URL;
 
+    if (!connectionString) {
+      throw new Error("DATABASE_URL is still undefined! Check your .env file path.");
+    }
+
     // Supabase requires SSL, and rejecting unauthorized can cause errors 
     // in various local/dev environments. This is the production-safe fix.
     const pool = new Pool({
