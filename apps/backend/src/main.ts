@@ -1,6 +1,4 @@
-// apps/backend/src/main.ts
 import * as dotenv from 'dotenv';
-import * as path from 'path';
 
 dotenv.config({ path: 'D:/JavaScript/AI/dear-comrade/apps/backend/.env' });
 
