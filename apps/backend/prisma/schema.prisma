@@ -11,3 +11,33 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Patient {
+  id          String      @id @default(uuid())
+  phoneNumber String      @unique
+  name        String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  labReports  LabReport[]
+}
+
+model LabReport {
+  id                       String            @id @default(uuid())
+  patientId                String
+  patient                  Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  labName                  String?
+  criticalAnomaliesSummary String            @db.Text
+  uploadedAt               DateTime          @default(now())
+  biomarkers               BiomarkerRecord[]
+}
+
+model BiomarkerRecord {
+  id             String    @id @default(uuid())
+  labReportId    String
+  labReport      LabReport @relation(fields: [labReportId], references: [id], onDelete: Cascade)
+  name           String
+  value          Float
+  unit           String
+  isOutOfRange   Boolean
+  referenceRange String
+}
