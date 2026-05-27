@@ -17,10 +17,10 @@ export class PatientController {
   }
 
   @Get(':phoneNumber/latest-status')
-  async getLatestStatus(@Param('phoneNumber') phoneNumber: string) {
+  async getLatestStatus(@Param('phoneNumber') phoneNumber: string, @Query('lang') lang: string = 'hi-IN') {
     const data = await this.patientService.getPatientHistory(phoneNumber);
     const latest = data.labReports[0];
-    const summary = await this.insightService.getFriendlySummary(latest?.anomalies || []);
+    const summary = await this.insightService.getFriendlySummary(latest?.anomalies || [], lang);
 
     await this.patientService.notifyPatientIfCritical(phoneNumber, !latest?.requiresAttention, summary);
 
@@ -38,17 +38,35 @@ export class PatientController {
     @Param('phoneNumber') phoneNumber: string,
     @Param('reportId') reportId: string,
     @Query('lang') lang: string = 'hi-IN',
-    @Res() res: Response, // Injected to handle streaming
+    @Res() res: Response,
   ) {
     const report = await this.patientService.getReportById(reportId);
 
-    console.log("Streaming audio for report:", reportId);
+    // FIX: Calculate anomalies manually from the biomarkers array
+    const anomalies = report.biomarkers
+      .filter(b => b.isOutOfRange)
+      .map(b => b.name);
 
-    // Call the streaming service, passing the response object
+    // Now pass this calculated list to the InsightService
+    const hindiSummary = await this.insightService.getFriendlySummary(
+      anomalies,
+      lang
+    );
+
+    console.log("Streaming audio for summary:", hindiSummary);
+
     await this.sarvamService.streamTextToSpeech(
-      report.criticalAnomaliesSummary,
+      hindiSummary,
       res,
       lang
     );
+  }
+
+  @Get('debug/voices')
+  async getVoices() {
+    const response = await fetch('https://api.sarvam.ai/speech-synthesis-voices', {
+      headers: { 'api-subscription-key': process.env.SARVAM_API_KEY }
+    });
+    return await response.json();
   }
 }
