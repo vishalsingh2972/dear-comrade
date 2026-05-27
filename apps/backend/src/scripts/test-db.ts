@@ -3,7 +3,7 @@ process.env.DATABASE_URL = "ADD_CONNECTION_STRING_HERE";
 // npx ts-node -r dotenv/config -r tsconfig-paths/register apps/backend/src/scripts/test-db.ts dotenv_config_path=apps/backend/.env
 
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../app.module'; 
+import { AppModule } from '../app.module';
 import { PrismaService } from '../prisma.service';
 
 async function bootstrap() {
@@ -12,13 +12,14 @@ async function bootstrap() {
 
   console.log('--- Starting Second Manual Database Test ---');
 
-  const phoneNumber = "918888888888"; 
+  const phoneNumber = "918888888888";
+  // Inside your test-db.ts script
   const mockData = {
     labName: "Global Diagnostic Center",
-    summary: "Patient shows signs of iron deficiency.",
+    summary: "Patient iron levels are showing improvement.",
     biomarkers: [
-      { name: "Iron", value: "35.0", unit: "mcg/dL", isOutOfRange: true, referenceRange: "60-170" },
-      { name: "Ferritin", value: "15.0", unit: "ng/mL", isOutOfRange: true, referenceRange: "20-200" }
+      { name: "Iron", value: "55.0", unit: "mcg/dL", isOutOfRange: false, referenceRange: "60-170" },
+      { name: "Ferritin", value: "25.0", unit: "ng/mL", isOutOfRange: false, referenceRange: "20-200" }
     ]
   };
 
