@@ -28,4 +28,16 @@ export class PatientService {
 
     return { ...patient, labReports: reportsWithAlerts };
   }
+
+  async notifyPatientIfCritical(phoneNumber: string, isHealthy: boolean, summary: string) {
+    if (!isHealthy) {
+      console.log(`--- [NOTIFICATION SENT] ---`);
+      console.log(`To: ${phoneNumber}`);
+      console.log(`Message: Dear Comrade, ${summary}`);
+      console.log(`---------------------------`);
+
+      // In a real scenario, this is where you call:
+      // await this.httpService.post('https://api.infobip.com/...', { ... }).toPromise();
+    }
+  }
 }
