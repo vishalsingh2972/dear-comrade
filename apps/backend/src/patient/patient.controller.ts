@@ -37,29 +37,16 @@ export class PatientController {
   async getAudioReport(
     @Param('phoneNumber') phoneNumber: string,
     @Param('reportId') reportId: string,
-    @Query('lang') lang: string = 'hi-IN',
+    @Query('lang') lang: string = 'hi-IN', // This comes from your frontend
     @Res() res: Response,
   ) {
     const report = await this.patientService.getReportById(reportId);
+    const anomalies = report.biomarkers.filter(b => b.isOutOfRange).map(b => b.name);
 
-    // FIX: Calculate anomalies manually from the biomarkers array
-    const anomalies = report.biomarkers
-      .filter(b => b.isOutOfRange)
-      .map(b => b.name);
+    // Pass 'lang' here so the LLM knows which language to write in
+    const summary = await this.insightService.getFriendlySummary(anomalies, lang);
 
-    // Now pass this calculated list to the InsightService
-    const hindiSummary = await this.insightService.getFriendlySummary(
-      anomalies,
-      lang
-    );
-
-    console.log("Streaming audio for summary:", hindiSummary);
-
-    await this.sarvamService.streamTextToSpeech(
-      hindiSummary,
-      res,
-      lang
-    );
+    await this.sarvamService.streamTextToSpeech(summary, res, lang);
   }
 
   @Get('debug/voices')

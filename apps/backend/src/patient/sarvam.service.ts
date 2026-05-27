@@ -7,11 +7,15 @@ export class SarvamService {
   private readonly apiUrl = 'https://api.sarvam.ai/text-to-speech/stream';
 
   async streamTextToSpeech(text: string, res: Response, lang: string = 'hi-IN') {
+
+    // Switch speaker based on language
+    const speaker = lang === 'te-IN' ? 'pooja' : 'shubh';
+
     // 1. Create a clear payload object
     const payload = {
       text: text,
       target_language_code: lang,
-      speaker: 'shubh',
+      speaker: speaker,
       model: 'bulbul:v3',
     };
 
