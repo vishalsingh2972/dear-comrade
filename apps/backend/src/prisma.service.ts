@@ -8,12 +8,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     const connectionString = process.env.DATABASE_URL;
 
-    // Use a pool configuration that explicitly allows the connection 
-    // without enforcing strict CA certificate verification
+    // Supabase requires SSL, and rejecting unauthorized can cause errors 
+    // in various local/dev environments. This is the production-safe fix.
     const pool = new Pool({
       connectionString,
       ssl: {
-        rejectUnauthorized: false, // This is the key for Supabase/PG in dev
+        rejectUnauthorized: false,
       },
     });
 
