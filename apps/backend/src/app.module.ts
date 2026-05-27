@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { IngestionModule } from './ingestion/ingestion.module';
 import { ConfigModule } from '@nestjs/config';
+import { PatientModule } from './patient/patient.module';
 
 @Module({
   imports: [
@@ -13,9 +14,10 @@ import { ConfigModule } from '@nestjs/config';
       },
     }),
     IngestionModule,
+    PatientModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: 'apps/backend/.env',
     }),
   ],
 })
