@@ -3,7 +3,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class InsightService {
-  // Use the API Key here
   private genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
   async getFriendlySummary(anomalies: string[]) {
