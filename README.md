@@ -43,40 +43,40 @@ For many NRI professionals living in the US or Europe, managing the medical work
 ## 🧠 Core System Processing Lifecycle
 
 ```txt
-[Parent WhatsApp Image Upload] ──> [Twilio WhatsApp/Media Edge] ──> (Fast HTTP ACK 200) ──> [NestJS Gateway]
-                                                                                                │
-                                                                                      (Microservice Enqueue)
-                                                                                                ▼
-                                                                                      [BullMQ + Redis Queue]
-                                                                                                │
-                                                  ┌─────────────────────────────────────────────┴─────────────────────────────────────────────┐
-                                                  ▼ (Async Worker Thread)                                                                     ▼
-                                      [Gemini 2.5 Flash Vision]                                                       [Pre-Flight Blur/Validation Engine]
-                                     (Strict JSON Schema Extract)                                                                     │ (If Unreadable)
-                                                  │                                                                                   ▼
-                                                  ▼                                                                       [Immediate Error Dispatch]
-                                      [Supabase / PostgreSQL]
-                                         (Time-Series State)
-                                                  │
-                         ┌────────────────────────┴────────────────────────┐
-                         ▼ (Postgres Realtime)                             ▼ (State Router)
-             [Next.js 15 UI Dashboard]                         [Dynamic Language Router]
-            (Instant Recharts Rendering)                                   │
-                                                         ┌─────────────────┴─────────────────┐
-                                                         ▼                                   ▼
-                                                [Telugu Pipeline]                   [Hindi Pipeline]
-                                                • Sarvam Mayura                     • Sarvam Mayura
-                                                • Bulbul V3 TTS Stream              • Bulbul V3 TTS Stream
-                                                         │                                   │
-                                                         └─────────────────┬─────────────────┘
-                                                                           ▼
-                                                       [Split-Target Dispatch Engine]
-                                                                           │
-                         ┌─────────────────────────────────────────────────┼─────────────────────────────────────────────────┐
-                         ▼ (Immediate / One-Time)                          ▼ (Immediate / One-Time)                          ▼ (Daily Recurring @ 8 AM IST)
-            [To NRI Child via WhatsApp]                       [To Parent Call & WhatsApp]                       [To Parent Only via Cron Worker]
-            • English Clinical Summary text.                  • Native Interactive IVR Call.                    • Custom Daily Audio Habit Reminder.
-            • Suppressed from daily routines.                 • Permanent Backup Audio Note.                    • Respects Call vs. WhatsApp pref.
+[Parent WhatsApp Image Upload] ──> [Infobip Omnichannel Edge] ──> (Fast HTTP ACK 200) ──> [NestJS Gateway]
+                                                                                               │
+                                                                                     (Microservice Enqueue)
+                                                                                               ▼
+                                                                                     [BullMQ + Redis Queue]
+                                                                                               │
+                                                 ┌─────────────────────────────────────────────┴─────────────────────────────────────────────┐
+                                                 ▼ (Async Worker Thread)                                                                     ▼
+                                     [Gemini 2.5 Flash Vision]                                                       [Pre-Flight Blur/Validation Engine]
+                                    (Strict JSON Schema Extract)                                                                     │ (If Unreadable)
+                                                 │                                                                                   ▼
+                                                 ▼                                                                       [Immediate Error Dispatch]
+                                     [Supabase / PostgreSQL]
+                                        (Time-Series State)
+                                                 │
+                        ┌────────────────────────┴────────────────────────┐
+                        ▼ (Postgres Realtime)                             ▼ (State Router)
+            [Next.js 15 UI Dashboard]                         [Dynamic Language Router]
+           (Instant Recharts Rendering)                                   │
+                                                        ┌─────────────────┴─────────────────┐
+                                                        ▼                                   ▼
+                                               [Telugu Pipeline]                   [Hindi Pipeline]
+                                               • Sarvam Mayura                     • Sarvam Mayura
+                                               • Bulbul V3 TTS Stream              • Bulbul V3 TTS Stream
+                                                        │                                   │
+                                                        └─────────────────┬─────────────────┘
+                                                                          ▼
+                                                      [Split-Target Dispatch Engine]
+                                                                          │
+                        ┌─────────────────────────────────────────────────┼─────────────────────────────────────────────────┐
+                        ▼ (Immediate / One-Time)                          ▼ (Immediate / One-Time)                          ▼ (Daily Recurring @ 8 AM IST)
+           [To NRI Child via WhatsApp]                       [To Parent Call & WhatsApp]                       [To Parent Only via Cron Worker]
+           • English Clinical Summary text.                  • Native Interactive IVR Call.                    • Custom Daily Audio Habit Reminder.
+           • Suppressed from daily routines.                 • Permanent Backup Audio Note.                    • Respects Call vs. WhatsApp pref.
 
 ```
 
@@ -90,7 +90,7 @@ For many NRI professionals living in the US or Europe, managing the medical work
 | **Frontend Platform** | **Next.js 15 (App Router)** | Powers the tracking interface with Server Actions, high-performance client metadata handling, and optimal asset caching layout. |
 | **Enterprise Backend** | **NestJS 10+** | Solid dependency-injected framework architecture that cleanly isolates microservices and third-party integrations. |
 | **Async Task Manager** | **BullMQ + Redis** | Offloads multi-modal OCR, complex translations, and speech streaming to background threads, protecting HTTP gateway availability. |
-| **Messaging & Voice** | **Twilio API** | Industry standard for reliable global carrier routing, handling complex WhatsApp media templates and outbound IVR workflows. |
+| **Messaging & Voice** | **Infobip Omnichannel API** | Enterprise carrier routing stability within India, built-in outbound DTMF IVR script handling, and multi-channel media templates. |
 | **Sovereign Speech AI** | **Sarvam AI (Mayura & Bulbul V3)** | Native understanding of regional Indian language structures and code-mixing. Bulbul V3 handles sub-250ms streaming over WebSockets. |
 | **Inference Framework** | **Gemini 2.5 Flash / Pro** | Supports native `responseSchema` forcing deterministic structural JSON extractions exactly at the model boundary. |
 | **Database & Security** | **Supabase (PostgreSQL)** | Combines excellent relational grouping for time-series charting with Row-Level Security (RLS) for clinical data isolation. |
@@ -99,7 +99,7 @@ For many NRI professionals living in the US or Europe, managing the medical work
 
 ## 📋 Telephony & State Machine Logic
 
-* **`MEDIA_INGESTED`**: Capture Twilio inbound media webhook streams, emit fast `jobId` confirmation, and append to processing queue.
+* **`MEDIA_INGESTED`**: Capture Infobip inbound media webhook streams, emit fast `jobId` confirmation, and append to processing queue.
 * **`IMAGE_VALIDATED`**: Analyze image contrast, framing, and blur. If unreadable, fail fast and notify the parent immediately.
 * **`METRIC_EXTRACTED`**: Invoke Gemini Flash to map medical values into an array of strictly typed biometric objects.
 * **`LEDGER_PERSISTED`**: Commit time-series points to PostgreSQL; triggers real-time data sync vectors across connected dashboard clients.
@@ -112,3 +112,6 @@ For many NRI professionals living in the US or Europe, managing the medical work
 ---
 
 ## 🚀 What I Learned from this Project:
+
+
+```
