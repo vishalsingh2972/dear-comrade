@@ -21,11 +21,11 @@ When a parent photographs a physical lab report via standard **WhatsApp**, the s
 
 ## 👩‍💼 Real-World Example: Sudha (Texas) & Her Father (Hyderabad)
 
-> “Sudha is in Texas working long hours, constantly worrying about her elderly father living alone in Hyderabad. He returns from a clinic with a complex 3-page blood report full of intimidating metrics like *HbA1c* and *Serum Creatinine*.
+> “Sudha is in Texas working long hours, constantly worrying about her elderly father living alone in Hyderabad. Her father returns from a clinic with a complex 3-page medical report full of intimidating metrics like *HbA1c* and *Serum Creatinine*.
 > Instead of facing a confusing patient portal, he takes a quick photo of the paper on WhatsApp and sends it to **Dear Comrade**.
 > Within 90 seconds, his phone rings with an interactive outbound call, and he receives a permanent voice note in his WhatsApp chat. A natural, local Telugu voice explains: *'Namaste andi. Mee blood report nenu chasanu. Mee Sugar levels control lone unnay, kani mee Creatinine level 1.4 koncham high undi. Doctor garu cheppinattu roju manchi ga neellu thagandi.'* The IVR prompts him to press 1 for daily health calls or 2 for daily WhatsApp audio notes. He presses 2.
 > At that exact same second, Sudha's phone in Texas buzzes with an English summary on WhatsApp. She opens her **Next.js Web Dashboard** to view digitized time-series trends over the last 6 months charted out beautifully via Recharts.
-> From that day onward, every morning at 8:00 AM IST, her father gets his custom audio reminder on WhatsApp (*'Good morning Uncle! Mee kidneys safe ga undalante roju 3 liters neellu thagadam marchipokandi!'*). Sudha receives zero daily notification spam, keeping her high-priority inbox entirely clutter-free.”
+> From that day onward, every morning at 8:00 AM IST, her father gets his custom audio reminder on WhatsApp (*'Good morning Uncle! Mee kidneys safe ga undalante roju 3 liters neellu thagadam marchipokandi!'*). Sudha receives zero daily notification spam, keeping her high-priority inbox entirely clutter-free, leaving both of them tension-free, and seamlessly in sync with each other on a day-to-day basis.”
 
 ---
 
