@@ -4,8 +4,10 @@ import { PatientController } from './patient.controller';
 import { PrismaService } from '../prisma.service';
 import { InsightService } from './insight.service';
 import { SarvamService } from './sarvam.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
+  imports: [HttpModule],
   controllers: [PatientController],
   providers: [PatientService, PrismaService, InsightService, SarvamService],
 })

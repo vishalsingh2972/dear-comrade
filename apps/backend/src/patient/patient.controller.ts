@@ -56,4 +56,20 @@ export class PatientController {
     });
     return await response.json();
   }
+
+  @Get('audio/:reportId')
+  async getAudioForInfobip(
+    @Param('reportId') reportId: string,
+    @Query('lang') lang: string = 'hi-IN',
+    @Res() res: Response,
+  ) {
+    const report = await this.patientService.getReportById(reportId);
+    const anomalies = report.biomarkers.filter(b => b.isOutOfRange).map(b => b.name);
+
+    // Generate the summary for the audio file
+    const summary = await this.insightService.getFriendlySummary(anomalies, lang);
+
+    // Stream it back to Infobip
+    await this.sarvamService.streamTextToSpeech(summary, res, lang);
+  }
 }

@@ -54,4 +54,27 @@ export class SarvamService {
       res.end();
     }
   }
+
+  async getAudioBuffer(text: string, lang: string = 'hi-IN'): Promise<Buffer> {
+    const speaker = lang === 'te-IN' ? 'pooja' : 'shubh';
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': this.apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        target_language_code: lang,
+        speaker,
+        model: 'bulbul:v3',
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed to generate audio buffer');
+
+    // Convert the response stream into a Buffer
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  }
 }
