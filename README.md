@@ -13,7 +13,8 @@ When a parent photographs a physical lab report via standard **WhatsApp**, the s
 
 1. **To Parent (Immediate & Interactive):** Delivers a permanent, personalized WhatsApp audio note using warm, conversational, code-mixed native syntax (**Telugish / Hinglish**) generated via **Sarvam AI**.
 2. **To NRI Child (One-Time & Informational):** Delivers an English medical executive summary on WhatsApp and updates a unified web dashboard.
-3. **Daily Routine Layer (Parent Only):** Every morning at 8:00 AM IST, a background cron engine dispatches tailored lifestyle and hydration reminders exclusively to the parent based on their extracted anomalies—keeping the child's inbox clear.
+3. **Critical Alert Tier (Priority):** If extracted medical metrics exceed safe clinical thresholds, the system bypasses standard routines to trigger an **Immediate Urgent Alert** to the child’s WhatsApp, ensuring rapid intervention.
+4. **Daily Routine Layer (Parent Only):** Every morning at 8:00 AM IST, a background cron engine dispatches tailored lifestyle and hydration reminders exclusively to the parent based on their extracted anomalies—keeping the child's inbox clear.
 
 **Dear Comrade** is an event-driven asynchronous pipeline that bridges dense clinical data with non-tech-savvy aging parents in India.
 
@@ -25,7 +26,8 @@ When a parent photographs a physical lab report via standard **WhatsApp**, the s
 > Instead of facing a confusing patient portal, he takes a quick photo of the paper on WhatsApp and sends it to **Dear Comrade**.
 > Within 90 seconds, he receives a WhatsApp message with a permanent voice note. A natural, local Telugu voice explains: *'Namaste andi. Mee blood report nenu chasanu. Mee Sugar levels control lone unnay, kani mee Creatinine level 1.4 koncham high undi. Doctor garu cheppinattu roju manchi ga neellu thagandi.'*
 > At that exact same second, Sudha's phone in Texas buzzes with an English summary on WhatsApp. She opens her **Next.js Web Dashboard** to view digitized time-series trends over the last 6 months charted out beautifully via Recharts.
-> From that day onward, every morning at 8:00 AM IST, her father gets his custom audio reminder on WhatsApp (*'Good morning Uncle! Mee kidneys safe ga undalante roju 3 liters neellu thagadam marchipokandi!'*). Sudha receives zero daily notification spam, keeping her high-priority inbox entirely clutter-free, leaving both of them tension-free, and seamlessly in sync with each other on a day-to-day basis.”
+> *Scenario B (Critical):* If the report shows dangerous blood sugar levels, the system alerts Sudha immediately: *'⚠️ URGENT: Father's blood sugar is critically high. Please call immediately.'*
+> From that day onward, every morning at 8:00 AM IST, her father gets his custom audio reminder on WhatsApp. Sudha receives zero daily notification spam, keeping her high-priority inbox entirely clutter-free, leaving both of them tension-free, and seamlessly in sync with each other on a day-to-day basis.”
 
 ---
 
@@ -62,16 +64,16 @@ For many NRI professionals living in the US or Europe, managing the medical work
                                         (Time-Series State)
                                                  │
                         ┌────────────────────────┴────────────────────────┐
-                        ▼ (Postgres Realtime)                             ▼ (State Router)
-            [Next.js 15 UI Dashboard]                         [Dynamic Language Router]
+                        ▼ (Postgres Realtime)                             ▼ (Criticality Check)
+            [Next.js 15 UI Dashboard]                         [Logic: Critical vs. Normal]
            (Instant Recharts Rendering)                                   │
                                                         ┌─────────────────┴─────────────────┐
                                                         ▼                                   ▼
-                                               [Split-Target Dispatch Engine]      [Cron/Recurring Engine]
+                                            [Standard Dispatch Engine]           [Urgent Alert Dispatch]
                                                         │                                   │
                                                         ▼                                   ▼
-                                           [To NRI Child via WhatsApp]         [To Parent via Twilio Audio]
-                                           • English Clinical Summary.         • Custom Daily Audio Reminders.
+                                           [To NRI Child via WhatsApp]         [To NRI Child via WhatsApp]
+                                           • English Clinical Summary.         • Emergency Notification.
 
 ```
 
@@ -95,7 +97,8 @@ For many NRI professionals living in the US or Europe, managing the medical work
 ## 📋 Telephony & State Machine Logic
 
 * **`MEDIA_INGESTED`**: Capture Twilio inbound WhatsApp media webhooks, emit fast `jobId` confirmation, and append to processing queue.
-* **`METRIC_EXTRACTED`**: Invoke Gemini Flash to map medical values into strictly typed biometric objects.
+* **`METRIC_EXTRACTED`**: Invoke Gemini Flash to map medical values into strictly typed biometric objects, including a `criticality_flag`.
+* **`CRITICALITY_CHECK`**: If `severity_level` is CRITICAL, trigger high-priority push notification to the child immediately.
 * **`SCRIPT_LOCALIZED`**: Use **Sarvam Mayura** to transform clinical data into a conversational, code-mixed native script (e.g., Telugu/Hindi) designed for elders.
 * **`AUDIO_STREAMED`**: Use **Sarvam Bulbul V3** to convert the localized script into a warm, natural audio file for permanent storage.
 * **`LEDGER_PERSISTED`**: Commit time-series points to PostgreSQL; triggers real-time data sync vectors across connected dashboard clients.
