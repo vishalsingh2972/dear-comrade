@@ -7,13 +7,19 @@ import { firstValueFrom } from 'rxjs';
 
 @Processor('report-queue')
 export class ReportProcessor extends WorkerHost {
-  private genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+  private genAI: GoogleGenerativeAI;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
     super();
+    // Initialize Gemini SDK using ConfigService to ensure env vars are loaded
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is missing in the environment configuration.");
+    }
+    this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
@@ -50,7 +56,6 @@ export class ReportProcessor extends WorkerHost {
       );
 
       // 3. Extract the audio
-      // Sarvam returns base64 audio in the 'audios' array
       const audioBase64 = sarvamResponse.data.audios[0];
       console.log("✅ SUCCESS: Audio generated, length:", audioBase64.length);
 
