@@ -3,9 +3,11 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { ReportProcessor } from './report.processor';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule,
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     BullModule.forRoot({ connection: { host: 'localhost', port: 6379 } }),
     BullModule.registerQueue({ name: 'report-queue' }),

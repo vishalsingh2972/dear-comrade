@@ -1,40 +1,68 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { MedicalReportSchema } from './report.schema';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 
 @Processor('report-queue')
 export class ReportProcessor extends WorkerHost {
   private genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-  // async process(job: Job<any, any, string>): Promise<any> {
-  //   const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    super();
+  }
 
-  //   // 1. In a real scenario, job.data.url contains the image from WhatsApp
-  //   // 2. We send the image + prompt to Gemini
-  //   const result = await model.generateContent([
-  //     "Extract medical metrics from this report. Return JSON matching this schema:",
-  //     JSON.stringify(MedicalReportSchema.safeParse({}).data) // Simplification
-  //   ]);
-
-  //   console.log("AI Analysis:", result.response.text());
-  //   return { success: true };
-  // }
-
-  //for testing
   async process(job: Job<any, any, string>): Promise<any> {
-    console.log(`✅ Worker received job: ${job.id}`);
+    console.log(`🚀 DEBUG: Started processing job: ${job.id}`);
 
-    // For testing, we are just telling the AI to extract data from a mock report
-    // We will pass the image data here in Day 4
-    const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Note: Use gemini-1.5-flash if 2.5 isn't active
+    try {
+      // 1. Analyze with Gemini
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      console.log("🛠️ DEBUG: Gemini initialized with gemini-2.5-flash");
 
-    const prompt = "Analyze this mock medical report and return the metrics in JSON format: Patient has Glucose of 110 mg/dL, Status: Normal.";
+      const result = await model.generateContent("Analyze this: Glucose 110 mg/dL, Normal. Return a short summary in Hindi.");
+      const summary = result.response.text();
+      console.log("🤖 AI Analysis Result:", summary);
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+      // 2. Convert to Speech using Sarvam AI
+      console.log("🎤 DEBUG: Sending text to Sarvam AI...");
 
-    console.log("🤖 AI Analysis Result:", response.text());
-    return { success: true };
+      const sarvamResponse = await firstValueFrom(
+        this.httpService.post(
+          'https://api.sarvam.ai/text-to-speech',
+          {
+            text: summary,
+            target_language_code: "hi-IN",
+            model: "bulbul:v3",
+            speaker: "shubh",
+          },
+          {
+            headers: {
+              'api-subscription-key': this.configService.get('SARVAM_API_KEY'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+      );
+
+      // 3. Extract the audio
+      // Sarvam returns base64 audio in the 'audios' array
+      const audioBase64 = sarvamResponse.data.audios[0];
+      console.log("✅ SUCCESS: Audio generated, length:", audioBase64.length);
+
+      return {
+        success: true,
+        summary,
+        audio: audioBase64
+      };
+
+    } catch (error: any) {
+      console.error("❌ DEBUG ERROR:", error.response?.data || error.message);
+      throw error;
+    }
   }
 }
