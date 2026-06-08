@@ -4,97 +4,67 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import * as fs from 'fs';
-import * as path from 'path';
-import twilio = require('twilio');
+import { v2 as cloudinary } from 'cloudinary';
+import { Twilio } from 'twilio';
 
 @Processor('report-queue')
 export class ReportProcessor extends WorkerHost {
   private genAI: GoogleGenerativeAI;
-  private twilioClient: twilio.Twilio;
+  private twilioClient: Twilio;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
     super();
-
-    // Load credentials
-    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-
-    // We initialize the client even if the key is potentially invalid
-    // to allow the application to boot. Errors will trigger in 'process'
-    this.genAI = new GoogleGenerativeAI(apiKey || '');
-
-    this.twilioClient = twilio(
-      this.configService.get('TWILIO_ACCOUNT_SID'),
-      this.configService.get('TWILIO_AUTH_TOKEN')
+    this.genAI = new GoogleGenerativeAI(this.configService.get<string>('GEMINI_API_KEY') || '');
+    this.twilioClient = new Twilio(
+      this.configService.get<string>('TWILIO_ACCOUNT_SID')!,
+      this.configService.get<string>('TWILIO_AUTH_TOKEN')!
     );
+    cloudinary.config({
+      cloud_name: this.configService.get('CLOUDINARY_CLOUD_NAME'),
+      api_key: this.configService.get('CLOUDINARY_API_KEY'),
+      api_secret: this.configService.get('CLOUDINARY_API_SECRET'),
+    });
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
     console.log(`🚀 DEBUG: Processing job: ${job.id}`);
 
     try {
-      // 1. Analyze with Gemini - 2.5-flash is stable and supported
       const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      const result = await model.generateContent("Analyze this: Glucose 110 mg/dL, Normal. Return a short summary in Hindi.");
+      const result = await model.generateContent("Glucose 110 mg/dL, Normal. Return short summary in Hindi.");
       const summary = result.response.text();
 
-      // 2. Sarvam Speech Synthesis
       const sarvamResponse = await firstValueFrom(
         this.httpService.post(
           'https://api.sarvam.ai/text-to-speech',
-          {
-            text: summary,
-            target_language_code: "hi-IN",
-            model: "bulbul:v3",
-            speaker: "shubh",
-          },
-          {
-            headers: {
-              'api-subscription-key': this.configService.get('SARVAM_API_KEY'),
-              'Content-Type': 'application/json'
-            }
-          }
+          { text: summary, target_language_code: "hi-IN", model: "bulbul:v3", speaker: "shubh" },
+          { headers: { 'api-subscription-key': this.configService.get('SARVAM_API_KEY'), 'Content-Type': 'application/json' } }
         )
       );
 
-      // 3. File System Persistence
-      const audioBase64 = sarvamResponse.data.audios[0];
-      const fileName = `report-${job.id}.mp3`;
-      const audioDir = path.join(process.cwd(), 'public', 'audio');
-
-      if (!fs.existsSync(audioDir)) {
-        fs.mkdirSync(audioDir, { recursive: true });
-      }
-
-      const filePath = path.join(audioDir, fileName);
-      fs.writeFileSync(filePath, Buffer.from(audioBase64, 'base64'));
-
-      // 4. Twilio Dispatch
-      const publicUrl = `${this.configService.get('PUBLIC_URL')}/audio/${fileName}`;
-      const fromNumber = this.configService.get('TWILIO_PHONE_NUMBER');
-      const toNumber = 'whatsapp:+916303366896';
-
-      console.log(`💬 Sending WhatsApp from ${fromNumber} to ${toNumber}`);
-
-      await this.twilioClient.messages.create({
-        body: `आपकी मेडिकल रिपोर्ट का सारांश: ${summary}`,
-        from: fromNumber,
-        to: toNumber,
-        mediaUrl: [publicUrl]
+      // Upload buffer directly to Cloudinary (No local file created)
+      const audioBuffer = Buffer.from(sarvamResponse.data.audios[0], 'base64');
+      const uploadResult: any = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { resource_type: "video", format: "mp3" },
+          (error, result) => error ? reject(error) : resolve(result)
+        ).end(audioBuffer);
       });
 
-      console.log(`✅ SUCCESS: Message sent.`);
-      return { success: true, summary, audioUrl: publicUrl };
+      await this.twilioClient.messages.create({
+        body: "आपकी मेडिकल रिपोर्ट तैयार है।",
+        from: this.configService.get('TWILIO_PHONE_NUMBER')!,
+        to: 'whatsapp:+916303366896',
+        mediaUrl: [uploadResult.secure_url]
+      });
 
+      console.log(`✅ SUCCESS: Message sent with URL: ${uploadResult.secure_url}`);
+      return { success: true };
     } catch (error: any) {
-      if (error.response) {
-        console.error("❌ TWILIO API ERROR:", JSON.stringify(error.response.data, null, 2));
-      } else {
-        console.error("❌ ERROR DETAILED:", error.message);
-      }
+      console.error("❌ ERROR:", error.message);
       throw error;
     }
   }
