@@ -60,6 +60,9 @@ For many NRI professionals living in the US or Europe, managing the medical work
                                      [Sarvam AI Pipeline]
                                   (Mayura Script + Bulbul TTS)
                                                  │
+                                     [Cloudinary CDN Streaming]
+                                     (Secure Permanent Media URL)
+                                                 │
                                      [Supabase / PostgreSQL]
                                         (Time-Series State)
                                                  │
@@ -88,6 +91,7 @@ For many NRI professionals living in the US or Europe, managing the medical work
 | **Enterprise Backend** | **NestJS 10+** | Solid dependency-injected framework architecture that cleanly isolates microservices. |
 | **Async Task Manager** | **BullMQ + Redis** | Offloads OCR, complex translations, and speech streaming to background threads, protecting HTTP gateway availability. |
 | **Messaging & Voice** | **Twilio API** | Industry-standard reliability for WhatsApp Business messaging and media transmission in India. |
+| **Media Hosting** | **Cloudinary** | Provides WhatsApp-trusted, globally secure, and permanent public URLs for audio streaming, bypassing untrusted local tunnels. |
 | **Sovereign Speech AI** | **Sarvam AI (Mayura & Bulbul V3)** | **Native pipeline:** Mayura for culturally aware code-mixed script generation and Bulbul V3 for high-fidelity regional TTS streaming. |
 | **Inference Framework** | **Gemini 2.5 Flash** | Supports native `responseSchema` forcing deterministic structural JSON extractions exactly at the model boundary. |
 | **Database & Security** | **Supabase (PostgreSQL)** | Combines relational time-series grouping with Row-Level Security (RLS) for clinical data isolation. |
@@ -100,7 +104,8 @@ For many NRI professionals living in the US or Europe, managing the medical work
 * **`METRIC_EXTRACTED`**: Invoke Gemini Flash to map medical values into strictly typed biometric objects, including a `criticality_flag`.
 * **`CRITICALITY_CHECK`**: If `severity_level` is CRITICAL, trigger high-priority push notification to the child immediately.
 * **`SCRIPT_LOCALIZED`**: Use **Sarvam Mayura** to transform clinical data into a conversational, code-mixed native script (e.g., Telugu/Hindi) designed for elders.
-* **`AUDIO_STREAMED`**: Use **Sarvam Bulbul V3** to convert the localized script into a warm, natural audio file for permanent storage.
+* **`AUDIO_STREAMED`**: Use **Sarvam Bulbul V3** to convert the localized script into a warm, natural audio file.
+* **`CLOUD_PERSISTED`**: Stream the generated audio buffer directly to **Cloudinary** to obtain a permanent, WhatsApp-trusted media URL.
 * **`LEDGER_PERSISTED`**: Commit time-series points to PostgreSQL; triggers real-time data sync vectors across connected dashboard clients.
 * **`PIPELINE_RESOLVED`**: Fire off the structured multi-channel delivery payload (English summary to child, Voice note to parent via Twilio).
 * **`CRON_RECURRING_FIRED`**: Trigger daily 08:00 IST BullMQ workers to batch process personalized, non-intrusive health habit reminders.
