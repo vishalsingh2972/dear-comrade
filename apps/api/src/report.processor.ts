@@ -59,14 +59,13 @@ export class ReportProcessor extends WorkerHost {
       const imageBase64 = await this.getBase64FromUrl(imageUrl);
       const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
-      // Prompt updated to return two distinct parts
       const prompt = `Analyze this lab report. 
-      1. Provide a warm summary in Hindi for the elderly patient.
+      1. Provide a warm summary in Telugu for the elderly patient.
       2. Provide a short, clinical summary in English for the child.
       3. Determine if critical (YES/NO).
       Format exactly like this:
       [CRITICAL:YES/NO]
-      [HINDI]: Summary here...
+      [TELUGU]: Summary here...
       [ENGLISH]: Summary here...`;
 
       const result = await model.generateContent([
@@ -75,20 +74,19 @@ export class ReportProcessor extends WorkerHost {
       ]);
       const fullResponse = result.response.text();
       
-      // Extraction logic
       const isCritical = fullResponse.includes('[CRITICAL:YES]');
-      const hindiSummary = fullResponse.split('[HINDI]:')[1]?.split('[ENGLISH]:')[0]?.trim() || "";
+      const teluguSummary = fullResponse.split('[TELUGU]:')[1]?.split('[ENGLISH]:')[0]?.trim() || "";
       const englishSummary = fullResponse.split('[ENGLISH]:')[1]?.trim() || "";
 
       await this.prisma.report.create({
-        data: { sender, summary: hindiSummary, isCritical }
+        data: { sender, summary: teluguSummary, isCritical }
       });
 
-      // --- SPEECH SYNTHESIS (Use Hindi Summary) ---
+      // --- SPEECH SYNTHESIS (Use Telugu Summary) ---
       const sarvamResponse = await firstValueFrom(
         this.httpService.post(
           'https://api.sarvam.ai/text-to-speech',
-          { text: hindiSummary, target_language_code: "hi-IN", model: "bulbul:v3", speaker: "shubh" },
+          { text: teluguSummary, target_language_code: "te-IN", model: "bulbul:v3", speaker: "pooja" },
           { headers: { 'api-subscription-key': this.configService.get('SARVAM_API_KEY'), 'Content-Type': 'application/json' } }
         )
       );
@@ -103,24 +101,21 @@ export class ReportProcessor extends WorkerHost {
 
       // --- CONDITIONAL NOTIFICATION ---
       if (isCritical) {
-        // 1. Send Urgent English Text to NRI Child
         await this.twilioClient.messages.create({
           body: `⚠️ URGENT: The medical report for ${sender} is CRITICAL. Summary: ${englishSummary}`,
           from: this.configService.get('TWILIO_PHONE_NUMBER')!,
           to: this.configService.get('NRI_CHILD_PHONE_NUMBER')!
         });
 
-        // 2. Send Audio + Warning Text to Elderly Parent
         await this.twilioClient.messages.create({
-          body: "आपकी रिपोर्ट आ गई है। कृपया डॉक्टर से सलाह लें, यह ज़रूरी है।",
+          body: "మీ వైద్య నివేదిక సిద్ధంగా ఉంది. దయచేసి డాక్టరును సంప్రదించండి.",
           from: this.configService.get('TWILIO_PHONE_NUMBER')!,
           to: sender,
           mediaUrl: [uploadResult.secure_url]
         });
       } else {
-        // Normal Flow
         await this.twilioClient.messages.create({
-          body: "आपकी मेडिकल रिपोर्ट का विश्लेषण तैयार है।",
+          body: "మీ వైద్య నివేదిక సిద్ధంగా ఉంది.",
           from: this.configService.get('TWILIO_PHONE_NUMBER')!,
           to: sender,
           mediaUrl: [uploadResult.secure_url]
