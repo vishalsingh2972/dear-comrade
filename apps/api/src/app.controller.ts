@@ -1,6 +1,7 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { Request } from 'express';
 
 @Controller('webhook')
 export class AppController {
@@ -8,8 +9,22 @@ export class AppController {
 
   @Post()
   async handleWebhook(@Body() body: any) {
-    await this.reportQueue.add('process-report', { data: body });
-    return { status: 'queued' };
+    // Twilio sends the image URL in 'MediaUrl0'
+    const image = body.MediaUrl0;
+    const sender = body.From; // The phone number of the parent
+
+    console.log(`📩 Received WhatsApp from ${sender}. Media: ${image}`);
+
+    if (image) {
+      // Add job only if there is an image to process
+      await this.reportQueue.add('process-report', { 
+        imageUrl: image, 
+        sender: sender 
+      });
+      return { status: 'queued_with_image' };
+    }
+
+    return { status: 'ignored_no_image' };
   }
 
   @Post('test-ai')

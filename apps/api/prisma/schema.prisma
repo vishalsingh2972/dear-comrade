@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  sender      String   
+  summary     String   
+  isCritical  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
