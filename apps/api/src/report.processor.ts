@@ -77,7 +77,7 @@ export class ReportProcessor extends WorkerHost {
       const fromNumber = this.configService.get('TWILIO_PHONE_NUMBER');
       const toNumber = 'whatsapp:+916303366896';
 
-      console.log(`💬 Sending WhatsApp from ${fromNumber} to ${toNumber}...`);
+      console.log(`💬 Sending WhatsApp from ${fromNumber} to ${toNumber}`);
 
       await this.twilioClient.messages.create({
         body: `आपकी मेडिकल रिपोर्ट का सारांश: ${summary}`,
@@ -90,7 +90,11 @@ export class ReportProcessor extends WorkerHost {
       return { success: true, summary, audioUrl: publicUrl };
 
     } catch (error: any) {
-      console.error("❌ ERROR DETAILED:", error.message);
+      if (error.response) {
+        console.error("❌ TWILIO API ERROR:", JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error("❌ ERROR DETAILED:", error.message);
+      }
       throw error;
     }
   }

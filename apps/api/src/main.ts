@@ -6,7 +6,15 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.useStaticAssets(join(process.cwd(), 'public'));
+  app.useStaticAssets(join(process.cwd(), 'public'), {
+    prefix: '/',
+    setHeaders: (res, path) => {
+      if (path.endsWith('.mp3')) {
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Content-Disposition', 'inline');
+      }
+    },
+  });
 
   await app.listen(3000);
   console.log('🚀 Application is running on: http://localhost:3000');
