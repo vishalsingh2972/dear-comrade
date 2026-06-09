@@ -13,7 +13,7 @@ When a parent photographs a physical lab report via standard **WhatsApp**, the s
 
 1. **To Parent (Immediate & Interactive):** Delivers a permanent, personalized WhatsApp audio note using warm, conversational, code-mixed native syntax (**Telugish / Hinglish**) generated via **Sarvam AI**.
 2. **To NRI Child (One-Time & Informational):** Delivers an English medical executive summary on WhatsApp and updates a unified web dashboard.
-3. **Critical Alert Tier (Priority):** If extracted medical metrics exceed safe clinical thresholds, the system bypasses standard routines to trigger an **Immediate Urgent Alert** to the child’s WhatsApp, ensuring rapid intervention.
+3. **Critical Alert Tier (Clinical Escalation):** If extracted medical metrics exceed safe clinical thresholds, the system bypasses standard routines to trigger an **Immediate Urgent Alert** to the child’s WhatsApp AND an **automated email dispatch to the family doctor** ensuring rapid medical intervention.
 4. **Daily Routine Layer (Parent Only):** Every morning at 8:00 AM IST, a background cron engine dispatches tailored lifestyle and hydration reminders exclusively to the parent based on their extracted anomalies—keeping the child's inbox clear.
 
 **Dear Comrade** is an event-driven asynchronous pipeline that bridges dense clinical data with non-tech-savvy aging parents in India.
@@ -25,8 +25,8 @@ When a parent photographs a physical lab report via standard **WhatsApp**, the s
 > “Sudha is in Texas working long hours, constantly worrying about her elderly father living alone in Hyderabad. Her father returns from a clinic with a complex 3-page medical report full of intimidating metrics like *HbA1c* and *Serum Creatinine*.
 > Instead of facing a confusing patient portal, he takes a quick photo of the paper on WhatsApp and sends it to **Dear Comrade**.
 > Within 90 seconds, he receives a WhatsApp message with a permanent voice note. A natural, local Telugu voice explains: *'Namaste andi. Mee blood report nenu chasanu. Mee Sugar levels control lone unnay, kani mee Creatinine level 1.4 koncham high undi. Doctor garu cheppinattu roju manchi ga neellu thagandi.'*
-> At that exact same second, Sudha's phone in Texas buzzes with an English summary on WhatsApp. She opens her **Next.js Web Dashboard** to view digitized time-series trends over the last 6 months charted out beautifully via Recharts.
-> *Scenario B (Critical):* If the report shows dangerous blood sugar levels, the system alerts Sudha immediately: *'⚠️ URGENT: Father's blood sugar is critically high. Please call immediately.'*
+> At that exact same second, Sudha's phone in Texas buzzes with an English summary on WhatsApp. She opens her **Next.js Web Dashboard** to view digitized time-series trends over the last 6 months.
+> *Scenario B (Critical):* If the report shows dangerous blood sugar levels, the system alerts Sudha immediately via WhatsApp AND sends an urgent clinical summary email to the family doctor with a secure link to the report dashboard.
 > From that day onward, every morning at 8:00 AM IST, her father gets his custom audio reminder on WhatsApp. Sudha receives zero daily notification spam, keeping her high-priority inbox entirely clutter-free, leaving both of them tension-free, and seamlessly in sync with each other on a day-to-day basis.”
 
 ---
@@ -47,36 +47,38 @@ For many NRI professionals living in the US or Europe, managing the medical work
 ```txt
 [Parent WhatsApp Image Upload] ──> [Twilio Messaging API] ──> (Fast HTTP ACK 200) ──> [NestJS Gateway]
                                                                                                │
-                                                                                     (Microservice Enqueue)
+                                                                                    (Microservice Enqueue)
                                                                                                ▼
-                                                                                     [BullMQ + Redis Queue]
+                                                                                    [BullMQ + Redis Queue]
                                                                                                │
-                                                 ┌─────────────────────────────────────────────┴─────────────────────────────────────────────┐
-                                                 ▼ (Async Worker Thread)                                                                     ▼
-                                     [Gemini 2.5 Flash Vision]                                                       [Pre-Flight Blur/Validation Engine]
-                                    (Strict JSON Schema Extract)                                                                     │ (If Unreadable)
-                                                 │                                                                                   ▼
-                                                 ▼                                                                       [Immediate Error Dispatch]
-                                     [Sarvam AI Pipeline]
-                                  (Mayura Script + Bulbul TTS)
-                                                 │
-                                     [Cloudinary CDN Streaming]
-                                     (Secure Permanent Media URL)
-                                                 │
-                                     [Supabase / PostgreSQL]
-                                        (Time-Series State)
-                                                 │
-                        ┌────────────────────────┴────────────────────────┐
-                        ▼ (Postgres Realtime)                             ▼ (Criticality Check)
-            [Next.js 15 UI Dashboard]                         [Logic: Critical vs. Normal]
-           (Instant Recharts Rendering)                                   │
-                                                        ┌─────────────────┴─────────────────┐
-                                                        ▼                                   ▼
-                                            [Standard Dispatch Engine]           [Urgent Alert Dispatch]
-                                                        │                                   │
-                                                        ▼                                   ▼
-                                           [To NRI Child via WhatsApp]         [To NRI Child via WhatsApp]
-                                           • English Clinical Summary.         • Emergency Notification.
+                                   ┌───────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────┐
+                                   ▼ (Async Worker Thread)                                                                                                ▼
+                         [Gemini 2.5 Flash Vision]                                                                                         [Pre-Flight Validation]
+                        (Strict JSON Schema Extract)                                                                                       (If Unreadable)
+                                   │                                                                                                             │
+                                   ▼                                                                                                             ▼
+                         [Sarvam AI Pipeline]                                                                                          [Immediate Error Dispatch]
+                     (Mayura Script + Bulbul TTS)
+                                   │
+                         [Cloudinary CDN Streaming]
+                       (Secure Permanent Media URL)
+                                   │
+                         [Supabase / PostgreSQL]
+                           (Time-Series State)
+                                   │
+                  ┌────────────────┴────────────────┐
+                  ▼ (Postgres Realtime)             ▼ (Criticality Check)
+        [Next.js 15 UI Dashboard]          [Logic: Critical vs. Normal]
+       (Instant Recharts Rendering)                  │
+                          ┌──────────────────────────┴──────────────────────────┐
+                          ▼                                                     ▼
+              [Standard Dispatch Engine]                             [Urgent Escalation Engine]
+                          │                                                     │
+                          │                                         ┌───────────┴───────────┐
+                          │                                         ▼                       ▼
+              [To NRI Child via WhatsApp]                [To NRI Child WhatsApp]    [To Doctor via Resend]
+             • English Clinical Summary.               • Emergency Notification.   • Clinical Summary + 
+                                                                                   Secure Dashboard Link.
 
 ```
 
@@ -86,29 +88,30 @@ For many NRI professionals living in the US or Europe, managing the medical work
 
 | Architecture Layer | Technology | Engineering Selection Reason |
 | --- | --- | --- |
-| **Monorepo Orchestrator** | **Turborepo** | Enforces a unified TypeScript workspace so frontend and backend seamlessly share type definitions and Zod validation schemas. |
-| **Frontend Platform** | **Next.js 15 (App Router)** | Powers the tracking interface with Server Actions and optimal asset caching layout. |
-| **Enterprise Backend** | **NestJS 10+** | Solid dependency-injected framework architecture that cleanly isolates microservices. |
-| **Async Task Manager** | **BullMQ + Redis** | Offloads OCR, complex translations, and speech streaming to background threads, protecting HTTP gateway availability. |
-| **Messaging & Voice** | **Twilio API** | Industry-standard reliability for WhatsApp Business messaging and media transmission in India. |
-| **Media Hosting** | **Cloudinary** | Provides WhatsApp-trusted, globally secure, and permanent public URLs for audio streaming, bypassing untrusted local tunnels. |
-| **Sovereign Speech AI** | **Sarvam AI (Mayura & Bulbul V3)** | **Native pipeline:** Mayura for culturally aware code-mixed script generation and Bulbul V3 for high-fidelity regional TTS streaming. |
-| **Inference Framework** | **Gemini 2.5 Flash** | Supports native `responseSchema` forcing deterministic structural JSON extractions exactly at the model boundary. |
-| **Database & Security** | **Supabase (PostgreSQL)** | Combines relational time-series grouping with Row-Level Security (RLS) for clinical data isolation. |
+| **Monorepo Orchestrator** | **Turborepo** | Enforces a unified TypeScript workspace. |
+| **Frontend Platform** | **Next.js 15** | Powers the tracking interface with Server Actions. |
+| **Enterprise Backend** | **NestJS 10+** | Solid dependency-injected framework. |
+| **Async Task Manager** | **BullMQ + Redis** | Offloads intensive AI/TTS tasks to background threads. |
+| **Messaging & Voice** | **Twilio API** | Industry-standard reliability for WhatsApp. |
+| **Email Escalation** | **Resend** | Secure, developer-focused API for critical clinical alerts. |
+| **Media Hosting** | **Cloudinary** | Provides WhatsApp-trusted, secure media URLs. |
+| **Sovereign Speech AI** | **Sarvam AI** | Regional language mastery and natural TTS. |
+| **Inference Framework** | **Gemini 2.5 Flash** | Deterministic structured JSON output. |
+| **Database & Security** | **Supabase (PostgreSQL)** | Relational time-series data with RLS security. |
 
 ---
 
 ## 📋 Telephony & State Machine Logic
 
-* **`MEDIA_INGESTED`**: Capture Twilio inbound WhatsApp media webhooks, emit fast `jobId` confirmation, and append to processing queue.
-* **`METRIC_EXTRACTED`**: Invoke Gemini Flash to map medical values into strictly typed biometric objects, including a `criticality_flag`.
-* **`CRITICALITY_CHECK`**: If `severity_level` is CRITICAL, trigger high-priority push notification to the child immediately.
-* **`SCRIPT_LOCALIZED`**: Use **Sarvam Mayura** to transform clinical data into a conversational, code-mixed native script (e.g., Telugu/Hindi) designed for elders.
-* **`AUDIO_STREAMED`**: Use **Sarvam Bulbul V3** to convert the localized script into a warm, natural audio file.
-* **`CLOUD_PERSISTED`**: Stream the generated audio buffer directly to **Cloudinary** to obtain a permanent, WhatsApp-trusted media URL.
-* **`LEDGER_PERSISTED`**: Commit time-series points to PostgreSQL; triggers real-time data sync vectors across connected dashboard clients.
-* **`PIPELINE_RESOLVED`**: Fire off the structured multi-channel delivery payload (English summary to child, Voice note to parent via Twilio).
-* **`CRON_RECURRING_FIRED`**: Trigger daily 08:00 IST BullMQ workers to batch process personalized, non-intrusive health habit reminders.
+* **`MEDIA_INGESTED`**: Capture Twilio inbound WhatsApp media webhooks.
+* **`METRIC_EXTRACTED`**: Invoke Gemini Flash to map medical values into objects.
+* **`CRITICALITY_CHECK`**: If `severity_level` is CRITICAL, initiate two-way escalation: notify the NRI child via WhatsApp and dispatch a clinical alert email to the family doctor via **Resend**.
+* **`SCRIPT_LOCALIZED`**: Use **Sarvam Mayura** to transform clinical data into conversational, native script.
+* **`AUDIO_STREAMED`**: Use **Sarvam Bulbul V3** for natural TTS.
+* **`CLOUD_PERSISTED`**: Stream audio to **Cloudinary** for permanent URL access.
+* **`LEDGER_PERSISTED`**: Commit to PostgreSQL; triggers real-time data sync for the Dashboard.
+* **`PIPELINE_RESOLVED`**: Execute structured multi-channel delivery.
+* **`CRON_RECURRING_FIRED`**: Batch process personalized habit reminders for parents.
 
 ---
 

@@ -17,6 +17,7 @@ export class ReportProcessor extends WorkerHost {
   private twilioClient: Twilio;
   private prisma: PrismaClient;
   private resend: Resend;
+
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
@@ -109,23 +110,17 @@ export class ReportProcessor extends WorkerHost {
           to: this.configService.get('NRI_CHILD_PHONE_NUMBER')!
         });
 
-        // 2. Email Doctor with Report Attachment when critical
+        // 2. Email Doctor when critical (Just Text-based summary for now later will send pdf of dashboard)
         try {
           const emailResponse = await this.resend.emails.send({
             from: 'onboarding@resend.dev',
             to: this.configService.get('DOCTOR_EMAIL')!,
             subject: `🚨 URGENT: Critical Lab Report for ${sender}`,
-            html: `<p>A new critical lab report has been detected for <strong>${sender}</strong>.</p>
-           <p><strong>Summary:</strong> ${englishSummary}</p>
-           <p>Please find the medical report attached below.</p>`,
-            // attachments: [
-            //   {
-            //     filename: 'lab-report.jpg',
-            //     path: imageUrl,
-            //   },
-            // ],
+            html: `<h2>Urgent Medical Alert</h2>
+                   <p>A new critical lab report has been detected for <strong>${sender}</strong>.</p>
+                   <p><strong>Clinical Summary:</strong> ${englishSummary}</p>`
           });
-          console.log("Full Report Email sent successfully:", emailResponse.data?.id);
+          console.log("Urgent Email Alert sent successfully:", emailResponse.data?.id);
         } catch (emailError) {
           console.error("❌ Failed to send doctor email:", emailError);
         }
