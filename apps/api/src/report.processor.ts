@@ -66,10 +66,12 @@ export class ReportProcessor extends WorkerHost {
       1. Provide a warm summary in Telugu for the elderly patient.
       2. Provide a short, clinical summary in English for the child.
       3. Determine if critical (YES/NO).
+      4. Provide a 1-sentence daily health reminder (in Telugu) for the patient.
       Format exactly like this:
       [CRITICAL:YES/NO]
       [TELUGU]: Summary here...
-      [ENGLISH]: Summary here...`;
+      [ENGLISH]: Summary here...
+      [REMINDER]: 1-sentence reminder here...`;
 
       const result = await model.generateContent([
         prompt,
@@ -79,11 +81,13 @@ export class ReportProcessor extends WorkerHost {
 
       const FORCE_CRITICAL_TEST = true;
       const isCritical = FORCE_CRITICAL_TEST ? true : fullResponse.includes('[CRITICAL:YES]');
+      
       const teluguSummary = fullResponse.split('[TELUGU]:')[1]?.split('[ENGLISH]:')[0]?.trim() || "";
-      const englishSummary = fullResponse.split('[ENGLISH]:')[1]?.trim() || "";
+      const englishSummary = fullResponse.split('[ENGLISH]:')[1]?.split('[REMINDER]:')[0]?.trim() || "";
+      const reminder = fullResponse.split('[REMINDER]:')[1]?.trim() || "ఆరోగ్యంగా ఉండండి.";
 
       await this.prisma.report.create({
-        data: { sender, summary: teluguSummary, isCritical }
+        data: { sender, summary: teluguSummary, isCritical, dailyReminder: reminder }
       });
 
       const sarvamResponse = await firstValueFrom(
@@ -103,14 +107,14 @@ export class ReportProcessor extends WorkerHost {
       });
 
       if (isCritical) {
-        // 1. Notify NRI Child when critical
+        // 1. Notify NRI Child
         await this.twilioClient.messages.create({
           body: `⚠️ URGENT: The medical report for ${sender} is CRITICAL. Summary: ${englishSummary}`,
           from: this.configService.get('TWILIO_PHONE_NUMBER')!,
           to: this.configService.get('NRI_CHILD_PHONE_NUMBER')!
         });
 
-        // 2. Email Doctor when critical (Just Text-based summary for now later will send pdf of dashboard)
+        // 2. Email Doctor
         try {
           const emailResponse = await this.resend.emails.send({
             from: 'onboarding@resend.dev',

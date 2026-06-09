@@ -7,9 +7,10 @@ datasource db {
 }
 
 model Report {
-  id          String   @id @default(uuid())
-  sender      String   
-  summary     String   
-  isCritical  Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id            String   @id @default(uuid())
+  sender        String   
+  summary       String   
+  isCritical    Boolean  @default(false)
+  dailyReminder String?   
+  createdAt     DateTime @default(now())
 }
