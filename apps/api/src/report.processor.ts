@@ -9,13 +9,14 @@ import { Twilio } from 'twilio';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Resend } from 'resend';
 
 @Processor('report-queue')
 export class ReportProcessor extends WorkerHost {
   private genAI: GoogleGenerativeAI;
   private twilioClient: Twilio;
   private prisma: PrismaClient;
-
+  private resend: Resend;
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
@@ -26,6 +27,7 @@ export class ReportProcessor extends WorkerHost {
     const adapter = new PrismaPg(pool);
     this.prisma = new PrismaClient({ adapter });
 
+    this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
     this.genAI = new GoogleGenerativeAI(this.configService.get<string>('GEMINI_API_KEY') || '');
     this.twilioClient = new Twilio(
       this.configService.get<string>('TWILIO_ACCOUNT_SID')!,
@@ -58,7 +60,7 @@ export class ReportProcessor extends WorkerHost {
     try {
       const imageBase64 = await this.getBase64FromUrl(imageUrl);
       const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      
+
       const prompt = `Analyze this lab report. 
       1. Provide a warm summary in Telugu for the elderly patient.
       2. Provide a short, clinical summary in English for the child.
@@ -73,8 +75,9 @@ export class ReportProcessor extends WorkerHost {
         { inlineData: { data: imageBase64, mimeType: "image/jpeg" } }
       ]);
       const fullResponse = result.response.text();
-      
-      const isCritical = fullResponse.includes('[CRITICAL:YES]');
+
+      const FORCE_CRITICAL_TEST = true;
+      const isCritical = FORCE_CRITICAL_TEST ? true : fullResponse.includes('[CRITICAL:YES]');
       const teluguSummary = fullResponse.split('[TELUGU]:')[1]?.split('[ENGLISH]:')[0]?.trim() || "";
       const englishSummary = fullResponse.split('[ENGLISH]:')[1]?.trim() || "";
 
@@ -82,11 +85,10 @@ export class ReportProcessor extends WorkerHost {
         data: { sender, summary: teluguSummary, isCritical }
       });
 
-      // --- SPEECH SYNTHESIS (Use Telugu Summary) ---
       const sarvamResponse = await firstValueFrom(
         this.httpService.post(
           'https://api.sarvam.ai/text-to-speech',
-          { text: teluguSummary, target_language_code: "te-IN", model: "bulbul:v3", speaker: "pooja" },
+          { text: teluguSummary, target_language_code: "te-IN", model: "bulbul:v3", speaker: "shubh" },
           { headers: { 'api-subscription-key': this.configService.get('SARVAM_API_KEY'), 'Content-Type': 'application/json' } }
         )
       );
@@ -99,14 +101,36 @@ export class ReportProcessor extends WorkerHost {
         ).end(audioBuffer);
       });
 
-      // --- CONDITIONAL NOTIFICATION ---
       if (isCritical) {
+        // 1. Notify NRI Child when critical
         await this.twilioClient.messages.create({
           body: `⚠️ URGENT: The medical report for ${sender} is CRITICAL. Summary: ${englishSummary}`,
           from: this.configService.get('TWILIO_PHONE_NUMBER')!,
           to: this.configService.get('NRI_CHILD_PHONE_NUMBER')!
         });
 
+        // 2. Email Doctor with Report Attachment when critical
+        try {
+          const emailResponse = await this.resend.emails.send({
+            from: 'onboarding@resend.dev',
+            to: this.configService.get('DOCTOR_EMAIL')!,
+            subject: `🚨 URGENT: Critical Lab Report for ${sender}`,
+            html: `<p>A new critical lab report has been detected for <strong>${sender}</strong>.</p>
+           <p><strong>Summary:</strong> ${englishSummary}</p>
+           <p>Please find the medical report attached below.</p>`,
+            // attachments: [
+            //   {
+            //     filename: 'lab-report.jpg',
+            //     path: imageUrl,
+            //   },
+            // ],
+          });
+          console.log("Full Report Email sent successfully:", emailResponse.data?.id);
+        } catch (emailError) {
+          console.error("❌ Failed to send doctor email:", emailError);
+        }
+
+        // 3. Notify Parent
         await this.twilioClient.messages.create({
           body: "మీ వైద్య నివేదిక సిద్ధంగా ఉంది. దయచేసి డాక్టరును సంప్రదించండి.",
           from: this.configService.get('TWILIO_PHONE_NUMBER')!,
