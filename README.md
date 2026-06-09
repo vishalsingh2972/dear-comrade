@@ -46,19 +46,19 @@ For many NRI professionals living in the US or Europe, managing the medical work
 
 ```txt
 [Parent WhatsApp Image Upload] ──> [Twilio Messaging API] ──> (Fast HTTP ACK 200) ──> [NestJS Gateway]
-                                                                                               │
-                                                                                    (Microservice Enqueue)
-                                                                                               ▼
-                                                                                    [BullMQ + Redis Queue]
-                                                                                               │
-                                   ┌───────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────┐
-                                   ▼ (Async Worker Thread)                                                                                                ▼
-                         [Gemini 2.5 Flash Vision]                                                                                         [Pre-Flight Validation]
-                        (Strict JSON Schema Extract)                                                                                       (If Unreadable)
-                                   │                                                                                                             │
-                                   ▼                                                                                                             ▼
-                         [Sarvam AI Pipeline]                                                                                          [Immediate Error Dispatch]
-                     (Mayura Script + Bulbul TTS)
+                                                                                                 │
+                                                                                       (Microservice Enqueue)
+                                                                                                 ▼
+                                                                                      [BullMQ + Redis Queue]
+                                                                                                 │
+                                   ┌─────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────┐
+                                   ▼ (Async Worker Thread)                                                                                                  ▼
+                         [Gemini 2.5 Flash Vision]                                                                                                [Pre-Flight Validation]
+                        (Strict JSON Schema Extract)                                                                                                   (If Unreadable)
+                                   │                                                                                                                        │
+                                   ▼                                                                                                                        ▼
+                         [Sarvam AI Pipeline]                                                                                                     [Immediate Error Dispatch]
+                      (Mayura Script + Bulbul TTS)
                                    │
                          [Cloudinary CDN Streaming]
                        (Secure Permanent Media URL)
@@ -68,17 +68,21 @@ For many NRI professionals living in the US or Europe, managing the medical work
                                    │
                   ┌────────────────┴────────────────┐
                   ▼ (Postgres Realtime)             ▼ (Criticality Check)
-        [Next.js 15 UI Dashboard]          [Logic: Critical vs. Normal]
-       (Instant Recharts Rendering)                  │
-                          ┌──────────────────────────┴──────────────────────────┐
-                          ▼                                                     ▼
-              [Standard Dispatch Engine]                             [Urgent Escalation Engine]
-                          │                                                     │
-                          │                                         ┌───────────┴───────────┐
-                          │                                         ▼                       ▼
-              [To NRI Child via WhatsApp]                [To NRI Child WhatsApp]    [To Doctor via Resend]
-             • English Clinical Summary.               • Emergency Notification.   • Clinical Summary + 
-                                                                                   Secure Dashboard Link.
+          [Next.js 15 UI Dashboard]         [Logic: Critical vs. Normal]
+         (Instant Recharts Rendering)                 │
+                                   ┌──────────────────┴──────────────────┐
+                                   ▼                                     ▼
+                         [Standard Dispatch Engine]            [Urgent Escalation Engine]
+                                   │                                     │
+                                   │                               ┌─────┴───────────────┐
+                                   │                               ▼                     ▼
+                         [To NRI Child via WhatsApp]      [To NRI Child WhatsApp]    [To Doctor via Resend]
+                       • English Clinical Summary.        • Emergency Notification.  • Clinical Summary + 
+                                                                                     Secure Dashboard Link.
+                                   │
+                                   ▼
+                    [Cron Engine: 8:00 AM Daily Nudge]
+                   • Personalized Audio/Text Reminder.
 
 ```
 
@@ -92,6 +96,7 @@ For many NRI professionals living in the US or Europe, managing the medical work
 | **Frontend Platform** | **Next.js 15** | Powers the tracking interface with Server Actions. |
 | **Enterprise Backend** | **NestJS 10+** | Solid dependency-injected framework. |
 | **Async Task Manager** | **BullMQ + Redis** | Offloads intensive AI/TTS tasks to background threads. |
+| **Scheduling Engine** | **@nestjs/schedule** | Handles time-based cron jobs for daily reminders. |
 | **Messaging & Voice** | **Twilio API** | Industry-standard reliability for WhatsApp. |
 | **Email Escalation** | **Resend** | Secure, developer-focused API for critical clinical alerts. |
 | **Media Hosting** | **Cloudinary** | Provides WhatsApp-trusted, secure media URLs. |
@@ -111,7 +116,7 @@ For many NRI professionals living in the US or Europe, managing the medical work
 * **`CLOUD_PERSISTED`**: Stream audio to **Cloudinary** for permanent URL access.
 * **`LEDGER_PERSISTED`**: Commit to PostgreSQL; triggers real-time data sync for the Dashboard.
 * **`PIPELINE_RESOLVED`**: Execute structured multi-channel delivery.
-* **`CRON_RECURRING_FIRED`**: Batch process personalized habit reminders for parents.
+* **`CRON_RECURRING_FIRED`**: Batch process personalized habit reminders for parents via `@nestjs/schedule` at 8:00 AM IST.
 
 ---
 
