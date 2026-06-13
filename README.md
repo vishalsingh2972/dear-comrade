@@ -7,6 +7,62 @@
 
 ---
 
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+
+A["📸 Parent sends Lab Report Photo via WhatsApp"]
+
+subgraph AI_Processing
+    B["🔍 Gemini 2.5 Flash<br/>OCR + Medical Data Extraction"]
+    C["🧠 Sarvam Mayura (LLM)<br/>Medical Analysis + Understanding"]
+    D["📝 Health Summary<br/>English + Telugu Script"]
+    E["🎙️ Sarvam Bulbul (TTS)<br/>Natural Voice Generation"]
+end
+
+subgraph Users
+    F["👵 Parent receives Telugu Voice Note"]
+    G["👨‍💻 NRI Child receives English Summary"]
+    I["👨‍⚕️ Doctor receives Structured Report"]
+end
+
+subgraph Data_Layer
+    J["🗄️ Supabase Database"]
+end
+
+subgraph Analytics
+    K["📊 Real-Time Dashboard"]
+    L["📈 Health Trends"]
+    M["🔔 Alert History"]
+    N["📄 Report Archive"]
+end
+
+O["❤️ Simple Healthcare Communication for Indian Families"]
+
+A --> B
+B --> C
+C --> D
+D --> E
+E --> F
+
+D --> G
+G --> H["🚨 Critical Alerts"]
+
+H --> I
+
+G --> J
+I --> J
+F --> J
+
+J --> K
+K --> L
+K --> M
+K --> N
+
+N --> O
+```
+
 ## 📌 Project Overview
 
 When a parent photographs a physical lab report via standard **WhatsApp**, the system intercepts the media payload and forks into a split-target delivery pipeline:
