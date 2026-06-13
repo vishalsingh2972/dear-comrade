@@ -186,8 +186,14 @@ For many NRI professionals living in the US or Europe, managing the medical work
 
 ---
 
-## 🚀 What I Learned from this Project:
+## 🚀 What I Learned from this Project
 
--
+- Building "Dear Comrade" was my first time actually shipping a production-ready AI voice app. It taught me that moving from an "idea" to a working prototype involves much more than just writing code; it’s about managing the flow between different AI engines.
+- I learned how to stitch together complex pieces—Twilio for the telephony, Gemini for the brain, and Sarvam AI for the voice—into one smooth, reliable pipeline.
+- Working with Telugu and "Tenglish" was a massive eye-opener. I had to learn how to handle code-mixing and ensure the AI didn't sound like a robot, which gave me a much deeper appreciation for building multilingual systems for real Indian users.
+- I spent a lot of time getting comfortable with event-driven architecture. Using BullMQ and Redis to handle background tasks was a game-changer—it taught me how to keep a system responsive even when the AI processing takes a few seconds.
+- This project really drove home the point that engineering isn't just about the tech. In healthcare, the "how" matters just as much as the "what." If the delivery isn't empathetic or clear, the data is useless, and I learned to prioritize that human touch in my design.
+- Taking this from a concept in my head to a full-stack, functional product was a rewarding journey. It gave me real hands-on experience in how to architect, debug, and deploy an AI-first application.
 
+I look forward to discovering and working more with LLMs in the audio in my upcoming projects.
 ---
