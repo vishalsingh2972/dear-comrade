@@ -63,6 +63,14 @@ K --> N
 N --> O
 ```
 
+## 🎥 Demo Video
+
+Let's see Telugu Thodu in Action
+
+(add video demo here)
+
+---
+
 ## 📌 Project Overview
 
 When a parent photographs a physical lab report via standard **WhatsApp**, the system intercepts the media payload and forks into a split-target delivery pipeline:
