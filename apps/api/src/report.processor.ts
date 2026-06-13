@@ -1,8 +1,9 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { firstValueFrom } from 'rxjs';
 import { v2 as cloudinary } from 'cloudinary';
 import { Twilio } from 'twilio';
@@ -13,6 +14,7 @@ import { Resend } from 'resend';
 
 @Processor('report-queue')
 export class ReportProcessor extends WorkerHost {
+  private readonly logger = new Logger(ReportProcessor.name);
   private genAI: GoogleGenerativeAI;
   private twilioClient: Twilio;
   private prisma: PrismaClient;
@@ -55,11 +57,10 @@ export class ReportProcessor extends WorkerHost {
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
-    const { imageUrl, sender } = job.data;
-    console.log(`👁️ Vision Processing: ${imageUrl}`);
+    this.logger.log(`👁️ Processing report ${job.id} for: ${job.data.sender}`);
 
     try {
-      const imageBase64 = await this.getBase64FromUrl(imageUrl);
+      const imageBase64 = await this.getBase64FromUrl(job.data.imageUrl);
       const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `Analyze this lab report. 
@@ -77,19 +78,29 @@ export class ReportProcessor extends WorkerHost {
       ]);
       const fullResponse = result.response.text();
 
-      const FORCE_CRITICAL_TEST = true;
-      const isCritical = FORCE_CRITICAL_TEST ? true : fullResponse.includes('[CRITICAL:YES]');
-      const teluguSummary = fullResponse.split('[TELUGU]:')[1]?.split('[ENGLISH]:')[0]?.trim() || "";
-      const englishSummary = fullResponse.split('[ENGLISH]:')[1]?.trim() || "";
+      const isCritical = fullResponse.includes('[CRITICAL:YES]');
+      const teluguSummary = fullResponse.split('[TELUGU]:')[1]?.split('[ENGLISH]:')[0]?.trim() || "Report processed.";
+      const englishSummary = fullResponse.split('[ENGLISH]:')[1]?.trim() || "Report processed.";
 
+      // DATABASE FIX: Now saving English summary to the dashboard
       await this.prisma.report.create({
-        data: { sender, summary: teluguSummary, isCritical }
+        data: { 
+            sender: job.data.sender, 
+            summary: englishSummary, 
+            isCritical 
+        }
       });
 
       const sarvamResponse = await firstValueFrom(
         this.httpService.post(
           'https://api.sarvam.ai/text-to-speech',
-          { text: teluguSummary, target_language_code: "te-IN", model: "bulbul:v3", speaker: "shubh" },
+          {
+            text: teluguSummary,
+            target_language_code: "te-IN",
+            model: "bulbul:v3",
+            speaker: "shubh",
+            max_duration_seconds: 30
+          },
           { headers: { 'api-subscription-key': this.configService.get('SARVAM_API_KEY'), 'Content-Type': 'application/json' } }
         )
       );
@@ -103,47 +114,35 @@ export class ReportProcessor extends WorkerHost {
       });
 
       if (isCritical) {
-        // 1. Notify NRI Child when critical
         await this.twilioClient.messages.create({
-          body: `⚠️ URGENT: The medical report for ${sender} is CRITICAL. Summary: ${englishSummary}`,
+          body: `⚠️ URGENT: The medical report for ${job.data.sender} is CRITICAL. Summary: ${englishSummary}`,
           from: this.configService.get('TWILIO_PHONE_NUMBER')!,
           to: this.configService.get('NRI_CHILD_PHONE_NUMBER')!
         });
 
-        // 2. Email Doctor when critical (Just Text-based summary for now later will send pdf of dashboard)
         try {
-          const emailResponse = await this.resend.emails.send({
+          await this.resend.emails.send({
             from: 'onboarding@resend.dev',
             to: this.configService.get('DOCTOR_EMAIL')!,
-            subject: `🚨 URGENT: Critical Lab Report for ${sender}`,
-            html: `<h2>Urgent Medical Alert</h2>
-                   <p>A new critical lab report has been detected for <strong>${sender}</strong>.</p>
-                   <p><strong>Clinical Summary:</strong> ${englishSummary}</p>`
+            subject: `🚨 URGENT: Critical Lab Report for ${job.data.sender}`,
+            html: `<p>Critical lab report for <strong>${job.data.sender}</strong>.</p><p>${englishSummary}</p>`
           });
-          console.log("Urgent Email Alert sent successfully:", emailResponse.data?.id);
         } catch (emailError) {
-          console.error("❌ Failed to send doctor email:", emailError);
+          this.logger.error("Failed to send doctor email", emailError);
         }
-
-        // 3. Notify Parent
-        await this.twilioClient.messages.create({
-          body: "మీ వైద్య నివేదిక సిద్ధంగా ఉంది. దయచేసి డాక్టరును సంప్రదించండి.",
-          from: this.configService.get('TWILIO_PHONE_NUMBER')!,
-          to: sender,
-          mediaUrl: [uploadResult.secure_url]
-        });
-      } else {
-        await this.twilioClient.messages.create({
-          body: "మీ వైద్య నివేదిక సిద్ధంగా ఉంది.",
-          from: this.configService.get('TWILIO_PHONE_NUMBER')!,
-          to: sender,
-          mediaUrl: [uploadResult.secure_url]
-        });
       }
 
+      await this.twilioClient.messages.create({
+        body: isCritical ? "మీ వైద్య నివేదిక సిద్ధంగా ఉంది. దయచేసి డాక్టరును సంప్రదించండి." : "మీ వైద్య నివేదిక సిద్ధంగా ఉంది.",
+        from: this.configService.get('TWILIO_PHONE_NUMBER')!,
+        to: job.data.sender,
+        mediaUrl: [uploadResult.secure_url]
+      });
+
+      this.logger.log(`✅ Pipeline completed for job ${job.id}`);
       return { success: true };
     } catch (error: any) {
-      console.error("❌ ERROR:", error.message);
+      this.logger.error(`❌ Pipeline failed for job ${job.id}: ${error.message}`);
       throw error;
     }
   }

@@ -10,7 +10,16 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule,
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     BullModule.forRoot({ connection: { host: 'localhost', port: 6379 } }),
-    BullModule.registerQueue({ name: 'report-queue' }),
+    BullModule.registerQueue({ 
+      name: 'report-queue',
+      defaultJobOptions: {
+        attempts: 3, 
+        backoff: {
+          type: 'exponential',
+          delay: 5000,
+        },
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [ReportProcessor],
