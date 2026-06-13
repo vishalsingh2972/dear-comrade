@@ -65,9 +65,9 @@ N --> O
 
 ## 🎥 Demo Video
 
-Let's see Telugu Thodu in Action
+Let's see Dear Comrade in Action
 
-(add video demo here)
+[(Video Link)](https://x.com/vishalsingh2972/status/2065684282203644147?s=20)
 
 ---
 
