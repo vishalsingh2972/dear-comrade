@@ -194,6 +194,5 @@ For many NRI professionals living in the US or Europe, managing the medical work
 - I spent a lot of time getting comfortable with event-driven architecture. Using BullMQ and Redis to handle background tasks was a game-changer—it taught me how to keep a system responsive even when the AI processing takes a few seconds.
 - This project really drove home the point that engineering isn't just about the tech. In healthcare, the "how" matters just as much as the "what." If the delivery isn't empathetic or clear, the data is useless, and I learned to prioritize that human touch in my design.
 - Taking this from a concept in my head to a full-stack, functional product was a rewarding journey. It gave me real hands-on experience in how to architect, debug, and deploy an AI-first application.
-
-I look forward to discovering and working more with LLMs in the audio in my upcoming projects.
+- I look forward to exploring and working more closely with audio LLMs in my upcoming projects.
 ---
