@@ -488,11 +488,10 @@ Provide a brief, clear English summary covering:
 
 Keep it concise (2-3 paragraphs), empathetic, and actionable. Use ONLY English, no other languages.`;
 
-      const response = await fetch('https://api.sarvam.ai/v1/chat/completions', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api-subscription-key': process.env.NEXT_PUBLIC_SARVAM_API_KEY || '',
         },
         body: JSON.stringify({
           model: 'sarvam-1',
